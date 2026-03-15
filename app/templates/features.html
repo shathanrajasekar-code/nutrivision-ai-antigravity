@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="bg-gray-50 py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl">Everything you need to eat smart</h1>
+            <p class="mt-4 text-xl text-gray-500">Discover all the features that make NutriVision AI the smartest nutrition tracking app.</p>
+        </div>
+        <div class="mt-12 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2">
+                <div class="p-10 flex flex-col justify-center">
+                    <h3 class="text-3xl font-bold text-gray-900 mb-4">Computer Vision Processing</h3>
+                    <p class="text-lg text-gray-500">Say goodbye to manual food logging. Our advanced YOLOv8 models identify multiple food items in a single photo quickly and accurately, removing the friction from diet tracking.</p>
+                </div>
+                <div class="bg-brand-50 p-10 flex items-center justify-center">
+                    <i class="fa-solid fa-camera-retro text-8xl text-brand-300"></i>
+                </div>
+                
+                <div class="bg-orange-50 p-10 flex items-center justify-center order-last md:order-none">
+                    <i class="fa-solid fa-brain text-8xl text-orange-300"></i>
+                </div>
+                <div class="p-10 flex flex-col justify-center">
+                    <h3 class="text-3xl font-bold text-gray-900 mb-4">Generative AI Insights</h3>
+                    <p class="text-lg text-gray-500">We don't just calculate calories; our built-in models evaluate the healthiness of your meal and suggest actionable improvements based on your specific macronutrient breakdown.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1 @@
+[{'label': 'dough', 'score': 0.6534402370452881}, {'label': 'face powder', 'score': 0.06053180620074272}, {'label': 'plate', 'score': 0.03009342961013317}, {'label': 'bagel, beigel', 'score': 0.018147291615605354}, {'label': 'mortar', 'score': 0.01621909998357296}]

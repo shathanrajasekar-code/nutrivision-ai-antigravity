@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8 border-b pb-4">About NutriVision AI</h1>
+    <div class="prose prose-lg text-gray-600 space-y-6">
+        <p>NutriVision AI was founded with a single mission: to make tracking your nutrition as simple as snapping a photo.</p>
+        <p>We combine advanced Computer Vision models (YOLOv8) to instantly detect food items from images, and parse them through generative AI to provide meaningful insights about your dietary habits.</p>
+        <div class="bg-brand-50 rounded-xl p-8 border border-brand-100 my-8">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">Our Technology</h3>
+            <ul class="list-disc pl-5 space-y-2">
+                <li><strong>Computer Vision:</strong> Real-time object detection models trained to recognize thousands of food varieties.</li>
+                <li><strong>Generative AI:</strong> Text-generation models that act as your personal nutritionist, analyzing meal data and offering personalized advice.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

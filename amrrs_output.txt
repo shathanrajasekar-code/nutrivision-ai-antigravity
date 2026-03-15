@@ -1,0 +1,1 @@
+[{'label': 'idli', 'score': 0.698574423789978}, {'label': 'dosai', 'score': 0.1554986834526062}, {'label': 'idiyappam', 'score': 0.05021829530596733}, {'label': 'puttu', 'score': 0.04973747581243515}, {'label': 'vadai', 'score': 0.04597107693552971}]

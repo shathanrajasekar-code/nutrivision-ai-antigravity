@@ -1,0 +1,1 @@
+[{'label': 'macarons', 'score': 0.8141472935676575}, {'label': 'cheese_plate', 'score': 0.017468426376581192}, {'label': 'falafel', 'score': 0.014837410300970078}, {'label': 'crab_cakes', 'score': 0.008413046598434448}, {'label': 'beef_tartare', 'score': 0.007864116691052914}]

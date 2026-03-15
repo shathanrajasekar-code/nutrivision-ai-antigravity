@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriVision AI - Smart Nutrition Platform</title>
+    <meta name="description" content="Generative AI Powered Smart Nutrition Analysis Platform">
+    <!-- TailwindCSS CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            900: '#7f1d1d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col antialiased">
+    <!-- Navigation -->
+    <nav class="glass sticky top-0 z-50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('main.index') }}" class="flex items-center gap-2">
+                        <i class="fa-solid fa-leaf text-brand-500 text-2xl"></i>
+                        <span class="font-bold text-xl tracking-tight text-gray-900">NutriVision<span class="text-brand-500">AI</span></span>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="{{ url_for('main.features') }}" class="text-gray-600 hover:text-brand-500 transition-colors">Features</a>
+                    <a href="{{ url_for('main.about') }}" class="text-gray-600 hover:text-brand-500 transition-colors">About</a>
+                    <a href="{{ url_for('main.contact') }}" class="text-gray-600 hover:text-brand-500 transition-colors">Contact</a>
+                    
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('dashboard.index') }}" class="text-gray-600 hover:text-brand-500 transition-colors">Dashboard</a>
+                        <a href="{{ url_for('meal.upload') }}" class="text-brand-500 font-medium hover:text-brand-600 transition-colors">
+                            <i class="fa-solid fa-camera mr-1"></i> Scan
+                        </a>
+                        <a href="{{ url_for('chat.chat') }}" class="text-purple-500 font-medium hover:text-purple-600 transition-colors">
+                            <i class="fa-solid fa-comment-dots mr-1"></i> NutriBot
+                        </a>
+                        <div class="h-6 w-px bg-gray-300"></div>
+                        <a href="{{ url_for('auth.logout') }}" class="text-gray-500 hover:text-gray-700 transition">Logout</a>
+                    {% else %}
+                        <div class="h-6 w-px bg-gray-300"></div>
+                        <a href="{{ url_for('auth.login') }}" class="text-gray-600 hover:text-brand-500 font-medium transition-colors">Log in</a>
+                        <a href="{{ url_for('auth.signup') }}" class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2 rounded-full font-medium transition-all shadow-md hover:shadow-lg">Sign up</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    {% set bg_class = 'bg-blue-100 text-blue-800 border-blue-200' %}
+                    {% if category == 'success' %}
+                        {% set bg_class = 'bg-green-100 text-green-800 border-green-200' %}
+                    {% elif category == 'danger' or category == 'error' %}
+                        {% set bg_class = 'bg-red-100 text-red-800 border-red-200' %}
+                    {% endif %}
+                    <div class="fade-in p-4 mb-4 rounded-lg border {{ bg_class }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow fade-in w-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center gap-2 mb-4 md:mb-0">
+                    <i class="fa-solid fa-leaf text-brand-500"></i>
+                    <span class="font-bold text-gray-900">NutriVisionAI &copy; 2026</span>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-gray-500"><i class="fa-brands fa-twitter text-xl"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-gray-500"><i class="fa-brands fa-github text-xl"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

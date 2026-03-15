@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12 text-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-brand-50 opacity-50 z-0"></div>
+        <div class="relative z-10">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-4">Scan Your Meal</h1>
+            <p class="text-gray-500 mb-8">Upload a photo of your food, and our AI will analyze its nutritional information instantly.</p>
+            
+            <form action="{{ url_for('meal.upload') }}" method="POST" enctype="multipart/form-data" id="uploadForm" class="space-y-6">
+                <!-- Dropzone -->
+                <div class="border-4 border-dashed border-brand-200 rounded-xl bg-white hover:bg-brand-50 transition p-12 relative cursor-pointer group" id="dropzone" onclick="document.getElementById('image').click();">
+                    <div class="space-y-4">
+                        <i class="fa-solid fa-cloud-arrow-up text-5xl text-brand-400 group-hover:scale-110 transition duration-300"></i>
+                        <p class="text-lg font-medium text-gray-700">Click to upload or drag and drop</p>
+                        <p class="text-sm text-gray-500">PNG, JPG, JPEG up to 16MB</p>
+                    </div>
+                    <input type="file" name="image" id="image" accept="image/*" class="hidden" onchange="previewImage(event)">
+                </div>
+                
+                <!-- Preview area -->
+                <div id="previewContainer" class="hidden mt-6">
+                    <div class="relative rounded-xl overflow-hidden shadow-sm inline-block max-w-sm mx-auto">
+                        <img id="imagePreview" src="#" alt="Preview" class="w-full h-auto max-h-64 object-cover">
+                        <button type="button" onclick="clearPreview(event)" class="absolute top-2 right-2 bg-red-500 text-white rounded-full px-3 py-1.5 hover:bg-red-600 transition shadow">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" id="submitBtn" disabled class="w-full max-w-md mx-auto flex justify-center py-4 px-4 border border-transparent rounded-full shadow-lg text-lg font-bold text-white bg-brand-500 hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed items-center gap-2">
+                        Analyze Nutrients <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="loadingState" class="hidden mt-6 flex flex-col items-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+                    <p class="mt-4 text-brand-600 font-medium animate-pulse">NutriVision AI is analyzing your food...</p>
+                    <p class="text-sm text-gray-500">Detecting items and calculating macros.</p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(event) {
+        const input = event.target;
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('previewContainer').classList.remove('hidden');
+                document.getElementById('dropzone').classList.add('hidden');
+                document.getElementById('submitBtn').disabled = false;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    
+    function clearPreview(event) {
+        event.stopPropagation();
+        document.getElementById('image').value = '';
+        document.getElementById('previewContainer').classList.add('hidden');
+        document.getElementById('dropzone').classList.remove('hidden');
+        document.getElementById('submitBtn').disabled = true;
+    }
+    
+    document.getElementById('uploadForm').addEventListener('submit', function() {
+        if (!document.getElementById('submitBtn').disabled) {
+            document.getElementById('submitBtn').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+        }
+    });
+</script>
+{% endblock %}

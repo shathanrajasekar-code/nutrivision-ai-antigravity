@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="bg-gradient-to-b from-purple-50 to-white min-h-[85vh] py-8 w-full">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-extrabold text-gray-900 flex items-center justify-center gap-3">
+                <i class="fa-solid fa-robot text-purple-600 text-4xl"></i> NutriBot
+            </h1>
+            <p class="text-gray-500 mt-2">Your personal generative AI nutrition assistant.</p>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="flex-grow bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col h-[600px] overflow-hidden">
+            <!-- Messages Area -->
+            <div id="chat-messages" class="flex-grow p-6 overflow-y-auto space-y-4">
+                <!-- Welcome Message -->
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0 mt-1">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="bg-gray-100 rounded-2xl rounded-tl-none px-5 py-3 max-w-[80%]">
+                        <p class="text-gray-800 text-sm">Hello {{ current_user.username }}! I'm NutriBot. Ask me anything about your diet, macronutrients, or for healthy alternatives to your favorite meals.</p>
+                    </div>
+                </div>
+
+                <!-- History -->
+                {% for msg in history %}
+                    {% if msg.role == 'user' %}
+                    <div class="flex items-start gap-4 justify-end">
+                        <div class="bg-brand-500 text-white rounded-2xl rounded-tr-none px-5 py-3 max-w-[80%] shadow-sm">
+                            <p class="text-sm">{{ msg.message }}</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center flex-shrink-0 mt-1">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0 mt-1">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="bg-gray-100 rounded-2xl rounded-tl-none px-5 py-3 max-w-[80%]">
+                            <p class="text-gray-800 text-sm whitespace-pre-wrap">{{ msg.message }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Typing Indicator (Hidden by default) -->
+            <div id="typing-indicator" class="hidden px-6 py-2 bg-white">
+                <div class="flex items-center gap-2 text-purple-500 text-sm italic">
+                    <i class="fa-solid fa-robot animate-pulse"></i> NutriBot is thinking...
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 bg-white border-t border-gray-100">
+                <form id="chat-form" class="flex gap-2 relative">
+                    <input type="text" id="chat-input" placeholder="e.g. Can you suggest a high-protein breakfast under 400 calories?" class="w-full pl-5 pr-16 py-4 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition" required>
+                    <button type="submit" class="absolute right-2 top-2 bottom-2 bg-purple-600 hover:bg-purple-700 text-white w-12 rounded-full flex items-center justify-center transition shadow-sm">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    document.getElementById('chat-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+        if (!message) return;
+
+        // Add user message to UI
+        const userHtml = `
+        <div class="flex items-start gap-4 justify-end">
+            <div class="bg-brand-500 text-white rounded-2xl rounded-tr-none px-5 py-3 max-w-[80%] shadow-sm">
+                <p class="text-sm">${escapeHtml(message)}</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center flex-shrink-0 mt-1">
+                <i class="fa-solid fa-user"></i>
+            </div>
+        </div>`;
+        chatMessages.insertAdjacentHTML('beforeend', userHtml);
+        
+        input.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // Show typing
+        document.getElementById('typing-indicator').classList.remove('hidden');
+
+        try {
+            const response = await fetch('{{ url_for("chat.api_chat") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+            const data = await response.json();
+            
+            document.getElementById('typing-indicator').classList.add('hidden');
+            
+            if(data.response) {
+                const botHtml = `
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0 mt-1">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="bg-gray-100 rounded-2xl rounded-tl-none px-5 py-3 max-w-[80%]">
+                        <p class="text-gray-800 text-sm whitespace-pre-wrap">${escapeHtml(data.response)}</p>
+                    </div>
+                </div>`;
+                chatMessages.insertAdjacentHTML('beforeend', botHtml);
+            }
+        } catch (error) {
+            console.error(error);
+            document.getElementById('typing-indicator').classList.add('hidden');
+        }
+        
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    function escapeHtml(unsafe) {
+        return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+</script>
+{% endblock %}

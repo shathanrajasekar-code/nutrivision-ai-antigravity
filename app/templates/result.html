@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{# ── Helpers ─────────────────────────────────────────────────────────────── #}
+{% set score = eval_data.health_score if eval_data else meal.health_score %}
+{% set macros = eval_data.macros if eval_data else {} %}
+{% set micros = eval_data.micros if eval_data else {} %}
+{% set insights = eval_data.insights if eval_data else [] %}
+{% set opt_tip = eval_data.optimisation_tip if eval_data else '' %}
+{% set food_name = eval_data.food_detected if eval_data else meal.food_detected %}
+{% set confidence = eval_data.confidence if eval_data else meal.food_confidence %}
+{% set category = eval_data.category if eval_data else meal.health_status %}
+{% set score_label = eval_data.score_label if eval_data else '' %}
+
+{# Score colour ── ANTIGRAVITY rubric #}
+{% if score >= 88 %}
+  {% set score_color = '#22c55e' %}
+  {% set score_bg = 'rgba(34,197,94,0.1)' %}
+  {% set score_badge = '🟢 Excellent' %}
+{% elif score >= 72 %}
+  {% set score_color = '#eab308' %}
+  {% set score_bg = 'rgba(234,179,8,0.1)' %}
+  {% set score_badge = '🟡 Good' %}
+{% elif score >= 50 %}
+  {% set score_color = '#f97316' %}
+  {% set score_bg = 'rgba(249,115,22,0.1)' %}
+  {% set score_badge = '🟠 Moderate' %}
+{% else %}
+  {% set score_color = '#ef4444' %}
+  {% set score_bg = 'rgba(239,68,68,0.1)' %}
+  {% set score_badge = '🔴 Indulge Mindfully' %}
+{% endif %}
+
+<style>
+  :root { --score-color: {{ score_color }}; --score-bg: {{ score_bg }}; }
+
+  .ag-page { background: #0d0f1a; min-height: 100vh; padding: 2rem 1rem; font-family: 'Inter', sans-serif; color: #e2e8f0; }
+  .ag-container { max-width: 1100px; margin: 0 auto; }
+
+  /* Hero card */
+  .hero-card { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-radius: 1.5rem; overflow: hidden; background: #161b2e; border: 1px solid rgba(255,255,255,0.07); margin-bottom: 1.5rem; box-shadow: 0 25px 60px rgba(0,0,0,0.5); }
+  @media(max-width:768px){ .hero-card { grid-template-columns: 1fr; } }
+  .hero-image { position: relative; min-height: 340px; background: #0d0f1a; }
+  .hero-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero-image-overlay { position: absolute; inset: 0; background: linear-gradient(to right, transparent 60%, #161b2e); }
+
+  /* Score ring */
+  .score-ring-wrap { position: absolute; bottom: 1.25rem; left: 1.25rem; background: rgba(13,15,26,0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem; }
+  .score-num { font-size: 2.2rem; font-weight: 900; color: var(--score-color); line-height: 1; }
+  .score-denom { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+  .score-tag { font-size: 0.7rem; color: var(--score-color); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  .hero-info { padding: 2rem; display: flex; flex-direction: column; justify-content: center; gap: 1rem; }
+  .food-title { font-size: 2rem; font-weight: 900; background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.03em; line-height: 1.1; }
+  .badge-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+  .badge-category { background: rgba(99,102,241,0.15); color: #a78bfa; border: 1px solid rgba(99,102,241,0.3); }
+  .badge-confidence { background: rgba(16,185,129,0.1); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+  .score-label-text { font-size: 0.8rem; color: #94a3b8; font-style: italic; padding: 0.5rem 0.75rem; background: var(--score-bg); border-left: 3px solid var(--score-color); border-radius: 0 0.5rem 0.5rem 0; }
+
+  /* Section cards */
+  .section-card { background: #161b2e; border: 1px solid rgba(255,255,255,0.06); border-radius: 1.25rem; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .section-title { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #64748b; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; }
+  .section-title i { color: #6366f1; }
+
+  /* Macro tiles */
+  .macro-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
+  @media(max-width:640px){ .macro-grid { grid-template-columns: repeat(3,1fr); } }
+  .macro-tile { background: #0d0f1a; border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem; padding: 1rem 0.75rem; text-align: center; transition: transform 0.2s, border-color 0.2s; }
+  .macro-tile:hover { transform: translateY(-2px); border-color: rgba(99,102,241,0.4); }
+  .macro-val { font-size: 1.6rem; font-weight: 900; line-height: 1; }
+  .macro-unit { font-size: 0.65rem; color: #64748b; margin-top: 0.15rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .macro-label { font-size: 0.7rem; color: #94a3b8; font-weight: 600; margin-top: 0.35rem; }
+  .val-cal { color: #f97316; }
+  .val-pro { color: #6366f1; }
+  .val-car { color: #f59e0b; }
+  .val-fat { color: #ec4899; }
+  .val-fib { color: #10b981; }
+
+  /* Micro bars */
+  .micro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media(max-width:640px){ .micro-grid { grid-template-columns: 1fr; } }
+  .micro-row { display: flex; flex-direction: column; gap: 0.3rem; }
+  .micro-meta { display: flex; justify-content: space-between; align-items: center; }
+  .micro-name { font-size: 0.75rem; font-weight: 700; color: #cbd5e1; }
+  .micro-value { font-size: 0.75rem; color: #94a3b8; }
+  .micro-track { height: 6px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; }
+  .micro-fill { height: 100%; border-radius: 999px; transition: width 1s ease; }
+
+  /* Insights */
+  .insight-list { display: flex; flex-direction: column; gap: 1rem; }
+  .insight-card { display: flex; gap: 1rem; padding: 1rem; background: #0d0f1a; border: 1px solid rgba(99,102,241,0.12); border-radius: 1rem; transition: border-color 0.2s; }
+  .insight-card:hover { border-color: rgba(99,102,241,0.35); }
+  .insight-icon { width: 2rem; height: 2rem; min-width: 2rem; background: rgba(99,102,241,0.15); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; color: #818cf8; font-size: 0.8rem; }
+  .insight-text { font-size: 0.82rem; color: #cbd5e1; line-height: 1.65; }
+
+  /* Optimisation tip */
+  .opt-tip { background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(99,102,241,0.08)); border: 1px solid rgba(16,185,129,0.25); border-radius: 1.25rem; padding: 1.25rem 1.5rem; display: flex; gap: 1rem; align-items: flex-start; }
+  .opt-tip-icon { font-size: 1.4rem; }
+  .opt-tip-label { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #34d399; margin-bottom: 0.35rem; }
+  .opt-tip-text { font-size: 0.83rem; color: #a7f3d0; line-height: 1.6; }
+
+  /* Detected foods */
+  .det-list { display: flex; flex-direction: column; gap: 0.6rem; }
+  .det-item { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1rem; background: #0d0f1a; border: 1px solid rgba(255,255,255,0.05); border-radius: 0.75rem; }
+  .det-name { font-size: 0.82rem; font-weight: 600; color: #e2e8f0; text-transform: capitalize; }
+  .det-cal { font-size: 0.8rem; color: #64748b; font-family: monospace; }
+
+  /* Back link */
+  .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #6366f1; font-size: 0.8rem; font-weight: 600; text-decoration: none; margin-bottom: 1.5rem; transition: color 0.2s; }
+  .back-link:hover { color: #a78bfa; }
+</style>
+
+<div class="ag-page">
+  <div class="ag-container">
+
+    <a href="{{ url_for('dashboard.index') }}" class="back-link">
+      <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+
+    {# ── HERO CARD ─────────────────────────────────────────────────────── #}
+    <div class="hero-card">
+      <div class="hero-image">
+        <img src="{{ url_for('static', filename='uploads/' + meal.image_path) }}" alt="Uploaded Meal">
+        <div class="hero-image-overlay"></div>
+        <div class="score-ring-wrap">
+          <div>
+            <div class="score-num">{{ score }}</div>
+            <div class="score-denom">/ 100</div>
+          </div>
+          <div>
+            <div class="score-tag">Health Score</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-info">
+        <div>
+          <div class="food-title">{{ food_name or 'Food Analysis' }}</div>
+          <div style="height:0.75rem;"></div>
+          <div class="badge-row">
+            {% if category %}
+              <span class="badge badge-category"><i class="fa-solid fa-tag"></i> {{ category }}</span>
+            {% endif %}
+            {% if confidence %}
+              <span class="badge badge-confidence"><i class="fa-solid fa-crosshairs"></i> {{ confidence }} Confidence</span>
+            {% endif %}
+          </div>
+        </div>
+        {% if score_label %}
+          <div class="score-label-text">{{ score_label }}</div>
+        {% else %}
+          <div class="score-label-text">{{ score_badge }}</div>
+        {% endif %}
+        <div style="font-size:0.75rem;color:#475569;">
+          Scanned {{ meal.timestamp.strftime('%b %d, %Y · %H:%M') }}
+        </div>
+      </div>
+    </div>
+
+    {# ── MACROS ────────────────────────────────────────────────────────── #}
+    {% if macros %}
+    <div class="section-card">
+      <div class="section-title"><i class="fa-solid fa-chart-pie"></i> Macronutrient Profile</div>
+      <div class="macro-grid">
+        <div class="macro-tile">
+          <div class="macro-val val-cal">{{ macros.calories }}</div>
+          <div class="macro-unit">kcal</div>
+          <div class="macro-label">Calories</div>
+        </div>
+        <div class="macro-tile">
+          <div class="macro-val val-pro">{{ macros.protein_g }}</div>
+          <div class="macro-unit">grams</div>
+          <div class="macro-label">Protein</div>
+        </div>
+        <div class="macro-tile">
+          <div class="macro-val val-car">{{ macros.carbs_g }}</div>
+          <div class="macro-unit">grams</div>
+          <div class="macro-label">Carbs</div>
+        </div>
+        <div class="macro-tile">
+          <div class="macro-val val-fat">{{ macros.fat_g }}</div>
+          <div class="macro-unit">grams</div>
+          <div class="macro-label">Fat</div>
+        </div>
+        <div class="macro-tile">
+          <div class="macro-val val-fib">{{ macros.fibre_g }}</div>
+          <div class="macro-unit">grams</div>
+          <div class="macro-label">Fibre</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── MICROS ────────────────────────────────────────────────────────── #}
+    {% if micros %}
+    <div class="section-card">
+      <div class="section-title"><i class="fa-solid fa-flask"></i> Micronutrient Scan</div>
+      <div class="micro-grid">
+
+        {% set vitc_pct  = (micros.vitC_pct  if micros.vitC_pct  <= 100 else 100) %}
+        {% set vita_pct  = (micros.vitA_pct  if micros.vitA_pct  <= 100 else 100) %}
+        {% set k_bar     = ((micros.potassium_mg / 47)|int if (micros.potassium_mg / 47) <= 100 else 100) %}
+        {% set na_bar    = ((micros.sodium_mg   / 23)|int if (micros.sodium_mg   / 23) <= 100 else 100) %}
+        {% set micro_items = [
+          ('Vitamin C',  micros.vitC_pct,    '%DV', vitc_pct,          '#10b981'),
+          ('Vitamin A',  micros.vitA_pct,    '%DV', vita_pct,          '#f59e0b'),
+          ('Iron',       micros.iron_pct,    '%DV', micros.iron_pct,   '#6366f1'),
+          ('Calcium',    micros.calcium_pct, '%DV', micros.calcium_pct,'#ec4899'),
+          ('Potassium',  micros.potassium_mg,'mg',  k_bar,             '#06b6d4'),
+          ('Sodium',     micros.sodium_mg,   'mg',  na_bar,            '#f97316'),
+        ] %}
+
+        {% for name, val, unit, pct, color in micro_items %}
+        <div class="micro-row">
+          <div class="micro-meta">
+            <span class="micro-name">{{ name }}</span>
+            <span class="micro-value">{{ val }} {{ unit }}</span>
+          </div>
+          <div class="micro-track">
+            <div class="micro-fill" style="width:{{ pct }}%; background:{{ color }};"></div>
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── INSIGHTS ──────────────────────────────────────────────────────── #}
+    {% if insights %}
+    <div class="section-card">
+      <div class="section-title"><i class="fa-solid fa-microscope"></i> Antigravity Insights</div>
+      <div class="insight-list">
+        {% set icons = ['fa-dna','fa-atom','fa-bolt','fa-seedling'] %}
+        {% for insight in insights %}
+        <div class="insight-card">
+          <div class="insight-icon">
+            <i class="fa-solid {{ icons[loop.index0 % 4] }}"></i>
+          </div>
+          <div class="insight-text">{{ insight }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% elif meal.analysis_insights %}
+    {# Legacy fallback for old DB rows without JSON #}
+    <div class="section-card">
+      <div class="section-title"><i class="fa-solid fa-microscope"></i> Antigravity Insights</div>
+      <div class="insight-list">
+        {% for line in meal.analysis_insights.split('\n') %}
+          {% if line.strip() and not 'Optimization Tip:' in line %}
+          <div class="insight-card">
+            <div class="insight-icon"><i class="fa-solid fa-atom"></i></div>
+            <div class="insight-text">{{ line.replace('-','').strip() }}</div>
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── OPTIMISATION TIP ─────────────────────────────────────────────── #}
+    {% if opt_tip %}
+    <div class="opt-tip">
+      <div class="opt-tip-icon">💡</div>
+      <div>
+        <div class="opt-tip-label">Optimisation Tip</div>
+        <div class="opt-tip-text">{{ opt_tip }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── DETECTED FOODS ─────────────────────────────────────────────── #}
+    {% if meal.detections %}
+    <div class="section-card" style="margin-top:1.5rem;">
+      <div class="section-title"><i class="fa-solid fa-utensils"></i> Detected Food Items</div>
+      <div class="det-list">
+        {% for detection in meal.detections %}
+        <div class="det-item">
+          <span class="det-name">{{ detection.food_name.replace('_',' ') }}</span>
+          <span class="det-cal">{{ detection.nutrition.calories|round|int if detection.nutrition else '—' }} kcal</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
